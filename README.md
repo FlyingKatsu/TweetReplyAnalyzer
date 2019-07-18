@@ -27,6 +27,6 @@ Made on Python 2.7, but can easily be modified to work on Python 3.x
 
 Generally, it collects all (up to `TweetConfig.max_results` most recent) replies to the given `TweetConfig.tweet_id`. For each reply, it removes punctuation, sets to lowercase, separates words, replaces synonyms with one of the bucket names (ex: `one` and `1` become `Option_1`), and removes duplicates within the same reply.
 
-Finally it outputs the resulting counts in descending order, along with buckets for each voting option. The buckets contain every unmodified reply that was counted towards the voting option, so that it can be manually reviewed and results adjusted for errors. 
+Finally it outputs the resulting counts in descending order, along with buckets for each voting option. The buckets contain every unmodified reply that was counted towards the voting option, so that it can be manually reviewed and results adjusted for errors. There is also a built-in bucket (named `__Unmatched__`, which you can change if desired) that collects any replies that fail to match any of the bucket synonyms (this is useful for catching typos). 
 
 Each bucket is output as its own `output/buckets/Bucket_Name.json` file. A full list of the reply texts is output in `output/replies.txt`, which is useful for comparing results from different days via diff. Newest results are on top. The top `TweetConfig.max_top_count` words are listed in `output/count.txt`

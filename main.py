@@ -31,6 +31,8 @@ class TweetConfig():
   max_top_count = 100
 
 # Initialize our options
+__Unmatched__ = '__Unmatched__'
+
 class Options(Enum):
   Option_1 = 1
   Option_2 = 2
@@ -58,6 +60,8 @@ option_aliases = {
 # Initialize buckets for each option
 global_options = [ name for name, member in Options.__members__.items() ]
 global_dict = { k:[] for k in global_options }
+global_dict[__Unmatched__] = []
+
 global_aliases = { alias:key for key in option_aliases for alias in option_aliases[key] }
 # print(global_aliases)
 # print(global_dict)
@@ -118,12 +122,16 @@ def clean_reply_text(tweets, aliases, filter_with_stopwords=True):
     if filter_with_stopwords:
       reply_words = [ word for word in reply_words if not word in stop_words ]
     # Keep track of which replies mention which named options
+    matched_at_least_one = False
     for name in global_options:
       try:
         if reply_words.index(name) >= 0:
           global_dict[name].append(reply)
+          matched_at_least_one = True
       except ValueError:
         pass
+    if not matched_at_least_one:
+      global_dict[__Unmatched__].append(reply)
     # Add to result
     words.append(reply_words)
 
@@ -140,6 +148,17 @@ def get_word_counts(words):
   for count in counts.most_common(TweetConfig.max_top_count):
     count_file.write(' '.join(str(s) for s in count) + '\n')
   count_file.close
+
+def print_buckets_to_file(name):
+  word_file = open('output/buckets/'+ name +'.json', 'w')
+  lines = global_dict.get(name)
+  word_file.write('{\n"' + name + '": {\n')
+  word_file.write('"count": ' + str(len(lines)) + ',\n')
+  word_file.write('"replies": [\n')
+  for line in lines:
+    word_file.write('"' + line.replace('\n',' ') + '",\n')
+  word_file.write(']\n}\n}\n')
+  word_file.close
 
 if __name__ == '__main__':
   print('Beginning the mission...\n')
@@ -158,14 +177,9 @@ if __name__ == '__main__':
 
   # print(global_dict)
   for name in global_options:
-    word_file = open('output/buckets/'+ name +'.json', 'w')
-    lines = global_dict.get(name)
-    word_file.write('{\n"' + name + '": {\n')
-    word_file.write('"count": ' + str(len(lines)) + ',\n')
-    word_file.write('"replies": [\n')
-    for line in lines:
-      word_file.write('"' + line.replace('\n',' ') + '",\n')
-    word_file.write(']\n}\n}\n')
-    word_file.close
+    print_buckets_to_file(name)
+
+  # print any unmatched replies to file
+  print_buckets_to_file(__Unmatched__)
 
   print('\nProcessed ' + str(len(replies)) + ' replies to original tweet.\n')
